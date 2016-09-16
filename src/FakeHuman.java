@@ -17,7 +17,7 @@ public class FakeHuman {
 	HashMap<Character, Integer> hmap = new HashMap<Character, Integer>();
 	char currentChar;
 	
-	public FakeHuman(){
+	public FakeHuman(){//Hello
 		try {r = new Robot();}
 		catch (AWTException e) {e.printStackTrace();}
 	}
