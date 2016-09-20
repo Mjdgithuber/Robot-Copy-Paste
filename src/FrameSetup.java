@@ -17,11 +17,18 @@ public class FrameSetup extends JFrame{
 	JPanel panelMain = new JPanel();
 	JPanel panelOptions = new JPanel();
 	
+	static FrameSetup main;
+	
 	public FrameSetup(){
+		//setupFrame(this);
+		
+		//This is the new stuff
 		setTitle("Robot Copy Paste");
 		setSize(378, 382);
 		setVisible(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		setResizable(false);
+		setLocationRelativeTo(null);
 		
 		JButton help = new JButton("Help");
 		JButton run = new JButton("Copy The Text You Want And Click Here");
@@ -33,28 +40,46 @@ public class FrameSetup extends JFrame{
 		panelMain.add(options, BorderLayout.SOUTH);
 		add(panelMain);
 		
+		run.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if(!isRunning){
+					t = null;
+					t = new Threading(main);
+					t.start();
+					isRunning = true;
+				}
+			}
+			
+		});
+		
+		
+		
+		
+		
 		JButton plusOne;
 		JButton plusTen;
 		JButton minusOne;
 		JButton minusTen;
 		
-//		run.setLocation(500, 500);
-//		
-//		panel.setLayout(new FlowLayout(1, 50, 30));
-//		panel.add(help);
-//		panel.add(run);
-//		panel.add(options);
-//		
-//		add(panel);
-		
-		
-//		help.setSize(100,50);
-//		help.setLocation(10, 10);
-//		panel.setLayout(null);
+							//		run.setLocation(500, 500);
+							//		
+							//		panel.setLayout(new FlowLayout(1, 50, 30));
+							//		panel.add(help);
+							//		panel.add(run);
+							//		panel.add(options);
+							//		
+							//		add(panel);
+									
+									
+							//		help.setSize(100,50);
+							//		help.setLocation(10, 10);
+							//		panel.setLayout(null);
 	}
 	
 	public static void main(String[] args){
-		FrameSetup main = new FrameSetup();
+		main = new FrameSetup();
 	}
 	
 

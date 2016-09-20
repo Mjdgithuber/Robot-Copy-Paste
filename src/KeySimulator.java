@@ -13,9 +13,13 @@ public class KeySimulator {
 	Random rd = new Random();
 	Scanner scan = new Scanner(System.in);
 	FileCreator fileCreator = new FileCreator();
+	HumanErrorSimulator typoError = new HumanErrorSimulator();
 	HashMap<Character, Integer> hmap = new HashMap<Character, Integer>();
 	
 	int charsPM;//Chars per minute
+	
+	boolean backspace;
+	char actualKey;
 	
 	char[] spChars = {'"' , ':', '?', '{', '}', '<', '>', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+'};
 	char[] toChars = {'\'', ';', '/', '[', ']', ',', '.', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='};
@@ -54,7 +58,7 @@ public class KeySimulator {
 	}
   	
 	private void fileInput() throws InterruptedException{
-		setCharsPerMinute(6000);//6000
+		setCharsPerMinute(800);//6000
 		Thread.sleep(2000);
 		
 		try (BufferedReader br = new BufferedReader(new FileReader("robotCopy.txt"))){//BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\Matthew Dennerlein\\Desktop\\Hello.txt"))
@@ -71,10 +75,24 @@ public class KeySimulator {
 						if(Character.isUpperCase(sToChars[i])) shiftChar(r, sToChars[i], false);
 						else{
 							try{
-								r.keyPress(KeyEvent.getExtendedKeyCodeForChar(sToChars[i]));
+								char errorKey = typoError.testForError(sToChars[i]);
+								if(errorKey != sToChars[i]){
+									backspace = true;
+									actualKey = sToChars[i];
+								}
+								r.keyPress(KeyEvent.getExtendedKeyCodeForChar(errorKey));
+								//r.keyPress(KeyEvent.getExtendedKeyCodeForChar(sToChars[i]));
 							}
 							catch(Exception e){e.printStackTrace();}
 						}
+					}
+					
+					if(backspace){
+						backspace = false;
+						sleep();
+						r.keyPress(KeyEvent.VK_BACK_SPACE);
+						sleep();
+						try {r.keyPress(KeyEvent.getExtendedKeyCodeForChar(actualKey));}catch(Exception e){}
 					}
 				}
 				r.keyPress(KeyEvent.VK_ENTER);

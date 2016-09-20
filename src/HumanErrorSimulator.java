@@ -7,20 +7,19 @@ Random rd = new Random();
 	int rows = 4, columns = 10;
 	int arrayRow, arrayCol;
 	char[][] keys = new char[rows][columns];
-//	String keyboard = "`1234567890-= qwertyuiop[]\\ asdfghjkl;' zxcvbnm,./";
 	String keyboard = "1234567890 qwertyuiop asdfghjkl; zxcvbnm,./";
 	
 	public HumanErrorSimulator(){
 		fillArray();
-		while(true){
-			char test = testForError('5');
-			if(test != '5') System.out.println(test);
-		}
+//		while(true){
+//			char test = testForError('5');
+//			if(test != '5') System.out.println(test);
+//		}
 	}
 	
-	public static void main(String[] args){
-		new HumanErrorSimulator();
-	}
+//	public static void main(String[] args){
+//		new HumanErrorSimulator();
+//	}
 	
 	private void fillArray(){
 		String[] splitRows = keyboard.split(" ");
@@ -35,7 +34,7 @@ Random rd = new Random();
 	public char testForError(char c){
 		double percent = rd.nextDouble();
 		
-		if(percent<=.05) return switchChar(c);
+		if(percent<=.05) return switchChar(c);//.05
 		return c;
 	}
 	
