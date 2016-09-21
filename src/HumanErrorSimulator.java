@@ -1,3 +1,4 @@
+import java.awt.Robot;
 import java.util.Random;
 
 public class HumanErrorSimulator {
@@ -8,6 +9,10 @@ Random rd = new Random();
 	int arrayRow, arrayCol;
 	char[][] keys = new char[rows][columns];
 	String keyboard = "1234567890 qwertyuiop asdfghjkl; zxcvbnm,./";
+	
+	double chanceForError = .05;
+	double chanceForStickyShift = .02;
+	double chanceToCompleteWordBeforeFixing = .3;
 	
 	public HumanErrorSimulator(){
 		fillArray();
@@ -34,7 +39,7 @@ Random rd = new Random();
 	public char testForError(char c){
 		double percent = rd.nextDouble();
 		
-		if(percent<=.05) return switchChar(c);//.05
+		if(percent<=chanceForError) return switchChar(c);//.05
 		return c;
 	}
 	
@@ -77,11 +82,6 @@ Random rd = new Random();
 			}
 		}
 		
-//		System.out.println("");
-//		System.out.println("xDisplacement: "+xDisplacement);
-//		System.out.println("yDisplacement: "+yDisplacement);
-//		System.out.println("");
-		
 		int newCharRow = arrayRow+yDisplacement;
 		
 		int newCharCol = arrayCol+xDisplacement;
@@ -92,6 +92,18 @@ Random rd = new Random();
 		}
 		
 		return keys[newCharRow][newCharCol];
+	}
+	
+	private void checkForStickyShift(char c){
+		//Check to see if the shift key should shift more than one letter
+	}
+	
+	private void fixWord(Robot r){
+		if(rd.nextDouble() <= chanceToCompleteWordBeforeFixing){
+			//Finish the word and then fix it after it is done
+		}else{
+			//Immediately start fixing
+		}
 	}
 	
 	private boolean locateChar(char findChar){
