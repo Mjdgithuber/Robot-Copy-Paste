@@ -2,7 +2,7 @@ import java.util.HashMap;
 
 public class Translator {
 	
-	HashMap<Character, Character> hm = new HashMap<Character, Character>();
+HashMap<Character, Character> hm = new HashMap<Character, Character>();
 
 	public Translator(){
 		fillHashMap();
@@ -10,7 +10,7 @@ public class Translator {
 	
 	private void fillHashMap(){
 		addChars("”“", '"');
-		addChars("’", '\'');
+		addChars("’‘", '\'');
 	}
 	
 	private void addChars(String s, char c){
@@ -30,5 +30,4 @@ public class Translator {
 		
 		return translatedString;
 	}
-
 }

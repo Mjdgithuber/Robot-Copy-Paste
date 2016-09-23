@@ -5,24 +5,31 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 public class FrameSetup extends JFrame{
 	
-	boolean isRunning = false;
-	Threading t;
-	JButton runButton, optionsButton;
+	private KeySimulator keySim = new KeySimulator();
 	
-	JPanel panelMain = new JPanel();
-	JPanel panelOptions = new JPanel();
+	private JButton help, run, options, 
+			plusOne, plusTen, plusOneHundred, minusOne, minusTen, minusOneHundred, goBackToMainMenu;
+	private JLabel charsPerMinute;
+	
+	private JPanel panelMain = new JPanel();
+	private JPanel panelOptions = new JPanel();
+	private JPanel parentPanel = new JPanel();
+	
+	private boolean isRunning = false;
 	
 	static FrameSetup main;
 	
 	public FrameSetup(){
-		//setupFrame(this);
-		
-		//This is the new stuff
+		/***********************************************
+		* This sets some default values for the JFrame *
+		***********************************************/
 		setTitle("Robot Copy Paste");
 		setSize(378, 382);
 		setVisible(true);
@@ -30,118 +37,154 @@ public class FrameSetup extends JFrame{
 		setResizable(false);
 		setLocationRelativeTo(null);
 		
-		JButton help = new JButton("Help");
-		JButton run = new JButton("Copy The Text You Want And Click Here");
-		JButton options = new JButton("Options");
-		
-		panelMain.setLayout(new BorderLayout());
-		panelMain.add(help, BorderLayout.NORTH);
-		panelMain.add(run, BorderLayout.CENTER);
-		panelMain.add(options, BorderLayout.SOUTH);
-		add(panelMain);
-		
-		run.addActionListener(new ActionListener(){
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				if(!isRunning){
-					t = null;
-					t = new Threading(main);
-					t.start();
-					isRunning = true;
-				}
-			}
-			
-		});
-		
-		
-		
-		
-		
-		JButton plusOne;
-		JButton plusTen;
-		JButton minusOne;
-		JButton minusTen;
-		
-							//		run.setLocation(500, 500);
-							//		
-							//		panel.setLayout(new FlowLayout(1, 50, 30));
-							//		panel.add(help);
-							//		panel.add(run);
-							//		panel.add(options);
-							//		
-							//		add(panel);
-									
-									
-							//		help.setSize(100,50);
-							//		help.setLocation(10, 10);
-							//		panel.setLayout(null);
+		addGui();
 	}
 	
 	public static void main(String[] args){
 		main = new FrameSetup();
 	}
 	
-
-	
-	private void setupFrame(FrameSetup motherClass){
-		JFrame frame = new JFrame();
-		frame.setSize(280, 250);
-		frame.setLocationRelativeTo(null);
-		frame.setVisible(true);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-		setLayout(new FlowLayout());
+	private void addGui(){
 		
-		runButton = new JButton("Copy The Text You Want And Click Here");
-		frame.add(runButton, BorderLayout.CENTER);
-
-		optionsButton = new JButton("Options");
-		optionsButton.setBackground(Color.CYAN);
-		frame.add(optionsButton, BorderLayout.PAGE_END);
+		/************************************************
+		* This is setting up the panel for the main menu*
+		************************************************/
+		help = new JButton("Help");
+		run = new JButton("Copy The Text You Want And Click Here");
+		options = new JButton("Options");
 		
-		addActionList(motherClass);
+		panelMain.setLayout(new BorderLayout());
+		panelMain.add(help, BorderLayout.NORTH);
+		panelMain.add(run, BorderLayout.CENTER);
+		panelMain.add(options, BorderLayout.SOUTH);
+		
+		/***************************************************
+		* This is setting up the panel for the options menu*
+		****************************************************/
+		plusOne = new JButton("+");
+		setSizeAndLocation(plusOne, 195, 40, 50, 20);
+		
+		plusTen = new JButton("++");
+		setSizeAndLocation(plusTen, 250, 40, 50, 20);
+		
+		plusOneHundred = new JButton("+++");
+		setSizeAndLocation(plusOneHundred, 305, 40, 60, 20);
+		
+		minusOne = new JButton("-");
+		setSizeAndLocation(minusOne, 117, 40, 45, 20);
+		
+		minusTen = new JButton("--");
+		setSizeAndLocation(minusTen, 65, 40, 45, 20);
+		
+		minusOneHundred = new JButton("---");
+		setSizeAndLocation(minusOneHundred, 5, 40, 55, 20);
+		
+		goBackToMainMenu = new JButton("Back");
+		setSizeAndLocation(goBackToMainMenu, (getWidth()-70)/2, 315, 70, 30);
+		
+		charsPerMinute = new JLabel(""+keySim.getCharsPerMinute());
+		setSizeAndLocation(charsPerMinute, (getWidth()-50)/2, 25, 50, 50);
+		
+		panelOptions.setLayout(null);
+		panelOptions.add(plusOne);
+		panelOptions.add(plusTen);
+		panelOptions.add(plusOneHundred);
+		panelOptions.add(minusOne);
+		panelOptions.add(minusTen);
+		panelOptions.add(minusOneHundred);
+		panelOptions.add(goBackToMainMenu);
+		panelOptions.add(charsPerMinute);
+		
+//		add(panelMain);
+		add(panelOptions);
+
+		addListeners();
 	}
 	
-	private void hideMainMenuButtons(){
-		runButton.setVisible(false);
-		optionsButton.setVisible(false);
+	private void setSizeAndLocation(JComponent comp, int x, int y, int width, int height){
+		comp.setLocation(x, y);
+		comp.setSize(width, height);
 	}
 	
-	private void addActionList(FrameSetup frame){
-		runButton.addActionListener(new ActionListener(){
-
+	private void addListeners(){
+		/*******************
+		* Main Menu Buttons*
+		*******************/
+		run.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				if(!isRunning){
-					t = null;
-					t = new Threading(frame);
-					t.start();
 					isRunning = true;
+					keySim.start();
+					isRunning = false;
 				}
-			}
-			
-		});
+		}});
 		
-		optionsButton.addActionListener(new ActionListener(){
-
+		options.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				hideMainMenuButtons();
-			}
-			
-		});
+				changePanel(panelMain, panelOptions);
+		}});
+		
+		/**********************
+		* Options Menu Buttons*
+		**********************/
+		plusOne.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				keySim.setCharsPerMinute(keySim.getCharsPerMinute()+1);
+				charsPerMinute.setText(""+keySim.getCharsPerMinute());
+		}});
+		
+		plusTen.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				keySim.setCharsPerMinute(keySim.getCharsPerMinute()+10);
+				charsPerMinute.setText(""+keySim.getCharsPerMinute());
+		}});
+		
+		plusOneHundred.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				keySim.setCharsPerMinute(keySim.getCharsPerMinute()+100);
+				charsPerMinute.setText(""+keySim.getCharsPerMinute());
+		}});
+		
+		minusOne.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				keySim.setCharsPerMinute(keySim.getCharsPerMinute()-1);
+				charsPerMinute.setText(""+keySim.getCharsPerMinute());
+		}});
+		
+		minusTen.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				keySim.setCharsPerMinute(keySim.getCharsPerMinute()-10);
+				charsPerMinute.setText(""+keySim.getCharsPerMinute());
+		}});
+		
+		minusOneHundred.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				keySim.setCharsPerMinute(keySim.getCharsPerMinute()-100);
+				charsPerMinute.setText(""+keySim.getCharsPerMinute());
+		}});
+		
+		goBackToMainMenu.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				changePanel(panelOptions, panelMain);
+		}});
+	}
+	
+	private void changePanel(JPanel fromPanel, JPanel toPanel){
+		remove(fromPanel);
+		add(toPanel);
+		revalidate();
+		repaint();
 	}
 	
 	public void setIsRunning(boolean b){ isRunning = b; }
-	
-	public void endThread(){
-		try {
-			setIsRunning(false);
-			//jb.setVisible(true);
-			t.join();
-		} 
-		catch (InterruptedException e) {e.printStackTrace();}
-	}
 
 }

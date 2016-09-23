@@ -2,8 +2,7 @@ import java.awt.Robot;
 import java.util.Random;
 
 public class HumanErrorSimulator {
-	
-Random rd = new Random();
+	private Random rd = new Random();
 	
 	int rows = 4, columns = 10;
 	int arrayRow, arrayCol;
@@ -16,15 +15,7 @@ Random rd = new Random();
 	
 	public HumanErrorSimulator(){
 		fillArray();
-//		while(true){
-//			char test = testForError('5');
-//			if(test != '5') System.out.println(test);
-//		}
 	}
-	
-//	public static void main(String[] args){
-//		new HumanErrorSimulator();
-//	}
 	
 	private void fillArray(){
 		String[] splitRows = keyboard.split(" ");

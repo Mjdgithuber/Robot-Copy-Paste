@@ -16,7 +16,7 @@ public class KeySimulator {
 	HumanErrorSimulator typoError = new HumanErrorSimulator();
 	HashMap<Character, Integer> hmap = new HashMap<Character, Integer>();
 	
-	int charsPM;//Chars per minute
+	int charsPM = 250;//Chars per minute
 	
 	boolean wordNeedsFixing;
 	char actualKey;
@@ -25,8 +25,9 @@ public class KeySimulator {
 	int currentCharNo;
 	char[] charsInLine;
 	
-	char[] spChars = {'"' , ':', '?', '{', '}', '<', '>', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+'};
-	char[] toChars = {'\'', ';', '/', '[', ']', ',', '.', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='};
+	char[] spChars = {'"' , ':', '?', '{', '}', '<', '>', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '|' };
+	char[] toChars = {'\'', ';', '/', '[', ']', ',', '.', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\\'};
+	char[] wordEnds = {' ', '.', '{', '}', '[', ']', '(', ')', '-'}; //Used to find where a words ends or begins
 	
 	
 	public KeySimulator(){
@@ -62,7 +63,7 @@ public class KeySimulator {
 	}
   	
 	private void getFileThenType() throws InterruptedException{
-		setCharsPerMinute(400);//This line of code sets the chars per minute (in the future this will be dictated by the user)
+		setCharsPerMinute(1200);//This line of code sets the chars per minute (in the future this will be dictated by the user)
 		Thread.sleep(2000);//This will be removed later on (hard coded sleep)
 
 		try (BufferedReader br = new BufferedReader(new FileReader("robotCopy.txt"))){
@@ -108,7 +109,7 @@ public class KeySimulator {
 				
 				int goBack = 0;
 				
-				for(int loops = 0; currentCharNo-loops > -1 && charsInLine[currentCharNo-loops] != ' '; loops++){
+				for(int loops = 0; currentCharNo-loops > -1 && !doesListContain(wordEnds, charsInLine[currentCharNo-loops]); loops++){
 					goBack++;
 					r.keyPress(KeyEvent.VK_BACK_SPACE);
 					sleep();
@@ -124,10 +125,13 @@ public class KeySimulator {
 				}
 			}
 		}
+		sleep();
 		r.keyPress(KeyEvent.VK_ENTER);
 	}
   	
-	private void setCharsPerMinute(int cps){ charsPM = cps; }
+	public void setCharsPerMinute(int cps){ charsPM = cps; }
+	
+	public int getCharsPerMinute(){ return charsPM; }
 	
 	private void sleep(){
 		double milliStop = 1d/(charsPM*1d / 60d / 1000d); //60 for seconds per minute, and 1000 for milliseconds per second
@@ -144,5 +148,6 @@ public class KeySimulator {
 		}catch(Exception e){ e.printStackTrace(); }
 	}
 }
+
 
 
