@@ -113,4 +113,6 @@ public class HumanErrorSimulator {
 		arrayRow = r;
 		arrayCol = c;
 	}
+	
+	public void setChanceForError(double errorChance){ chanceForError = errorChance; }
 }

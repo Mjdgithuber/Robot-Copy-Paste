@@ -2,7 +2,7 @@ import java.util.HashMap;
 
 public class Translator {
 	
-HashMap<Character, Character> hm = new HashMap<Character, Character>();
+	HashMap<Character, Character> hm = new HashMap<Character, Character>();
 
 	public Translator(){
 		fillHashMap();
@@ -11,6 +11,7 @@ HashMap<Character, Character> hm = new HashMap<Character, Character>();
 	private void fillHashMap(){
 		addChars("”“", '"');
 		addChars("’‘", '\'');
+		addChars("…", '.');
 	}
 	
 	private void addChars(String s, char c){
@@ -20,13 +21,22 @@ HashMap<Character, Character> hm = new HashMap<Character, Character>();
 	}
 	
 	public String translate(String s){
-		String translatedString; //This is the string that is going to be returned
+		String translatedString = ""; //This is the string that is going to be returned
 		char[] charsInString = s.toCharArray();//Converts the string into a char array so it can easily be amended
 		
 		//This loop goes through all of the chars and converts them into readable one's if they need it (The File Reader can't read all chars)
-		for(int i = 0; i<charsInString.length; i++) if(hm.containsKey(charsInString[i])) charsInString[i] = hm.get(charsInString[i]);
+		for(int i = 0; i<charsInString.length; i++){
+			int amountOfTimes = 1;
+			if(hm.containsKey(charsInString[i])){
+				if(hm.get(charsInString[i]) == '.') amountOfTimes = 3;
+				else amountOfTimes = 1;
+				charsInString[i] = hm.get(charsInString[i]);
+			}
+			
+			for(int times = 0; times<amountOfTimes; times++) translatedString += charsInString[i];
+		}
 		
-		translatedString = String.valueOf(charsInString);//This takes the array of chars and converts it back into a string
+		//translatedString = String.valueOf(charsInString);//This takes the array of chars and converts it back into a string
 		
 		return translatedString;
 	}

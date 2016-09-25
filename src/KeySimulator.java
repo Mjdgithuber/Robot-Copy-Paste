@@ -16,9 +16,9 @@ public class KeySimulator {
 	HumanErrorSimulator typoError = new HumanErrorSimulator();
 	HashMap<Character, Integer> hmap = new HashMap<Character, Integer>();
 	
-	int charsPM = 250;//Chars per minute
+	int charsPM = 500;//Chars per minute
 	
-	boolean wordNeedsFixing;
+	boolean wordNeedsFixing, errorKeyIsAWordEnd;
 	char actualKey;
 	
 	int spaceAt; //Used to determine were a word begins and ends
@@ -27,7 +27,7 @@ public class KeySimulator {
 	
 	char[] spChars = {'"' , ':', '?', '{', '}', '<', '>', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '|' };
 	char[] toChars = {'\'', ';', '/', '[', ']', ',', '.', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\\'};
-	char[] wordEnds = {' ', '.', '{', '}', '[', ']', '(', ')', '-'}; //Used to find where a words ends or begins
+	char[] wordEnds = {' ', '.', '{', '}', '[', ']', '(', ')', '-', ','}; //Used to find where a words ends or begins
 	
 	
 	public KeySimulator(){
@@ -63,7 +63,7 @@ public class KeySimulator {
 	}
   	
 	private void getFileThenType() throws InterruptedException{
-		setCharsPerMinute(1200);//This line of code sets the chars per minute (in the future this will be dictated by the user)
+		//setCharsPerMinute(1200);//This line of code sets the chars per minute (in the future this will be dictated by the user)
 		Thread.sleep(2000);//This will be removed later on (hard coded sleep)
 
 		try (BufferedReader br = new BufferedReader(new FileReader("robotCopy.txt"))){
@@ -94,8 +94,12 @@ public class KeySimulator {
 				else{
 					try{
 						char possibleErrorKey = typoError.testForError(stringToChars[i]);//This generates a char that might be wrong (Human Error)
-						if(possibleErrorKey != stringToChars[i])//Checks to see if there was an error (this error is fake and on purpose!)
+						if(possibleErrorKey != stringToChars[i]){//Checks to see if there was an error (this error is fake and on purpose!)
 							wordNeedsFixing = true;//Tells the program to backspace when it is time
+							if(doesListContain(wordEnds, stringToChars[i])){
+								errorKeyIsAWordEnd = true;
+							}
+						}
 						r.keyPress(KeyEvent.getExtendedKeyCodeForChar(possibleErrorKey));//Types the key (error or not)
 					}
 					catch(Exception e){e.printStackTrace();}
@@ -114,6 +118,13 @@ public class KeySimulator {
 					r.keyPress(KeyEvent.VK_BACK_SPACE);
 					sleep();
 				}
+				if(errorKeyIsAWordEnd){
+					errorKeyIsAWordEnd = false;
+					goBack++;
+					r.keyPress(KeyEvent.VK_BACK_SPACE);
+					sleep();
+				}
+				
 				
 				for(int reWrite=0; reWrite<goBack; reWrite++){
 					if(doesListContain(spChars, charsInLine[currentCharNo-goBack+reWrite+1])) shiftChar(charsInLine[currentCharNo-goBack+reWrite+1], true);
@@ -148,6 +159,3 @@ public class KeySimulator {
 		}catch(Exception e){ e.printStackTrace(); }
 	}
 }
-
-
-
