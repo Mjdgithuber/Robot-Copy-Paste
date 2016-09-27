@@ -1,10 +1,14 @@
+import java.awt.event.KeyEvent;
 import java.util.HashMap;
 
 public class Translator {
 	
-	HashMap<Character, Character> hm = new HashMap<Character, Character>();
-
-	public Translator(){
+	private KeySimulator keySim;
+	
+	private HashMap<Character, Character> hm = new HashMap<Character, Character>();
+	
+	public Translator(KeySimulator keySimulator){
+		keySim = keySimulator;
 		fillHashMap();
 	}
 	
@@ -32,11 +36,16 @@ public class Translator {
 				else amountOfTimes = 1;
 				charsInString[i] = hm.get(charsInString[i]);
 			}
+
+//			try{KeyEvent.getExtendedKeyCodeForChar(charsInString[i]);}
+//			catch(Exception e){
+//				System.out.println("In here");
+//				if(!keySim.doesListContain(keySim.spChars, charsInString[i])) writeChar = false;
+//			}
 			
+			//This adds the translated chars into the main string (this for loop is here in case of the ellipsis which has three periods in a row)
 			for(int times = 0; times<amountOfTimes; times++) translatedString += charsInString[i];
 		}
-		
-		//translatedString = String.valueOf(charsInString);//This takes the array of chars and converts it back into a string
 		
 		return translatedString;
 	}

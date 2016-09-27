@@ -2,20 +2,18 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 
 public class FileCreator {
 	
-	private Translator translator = new Translator();
+	//private Translator translator = new Translator();
 	
 	public void createAndWriteFile(){
 		try{
 			String s = (String)Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
-			s = translator.translate(s);
+			//s = translator.translate(s);
 			
 			File file = new File("robotCopy.txt");
 			file.createNewFile();
@@ -33,10 +31,28 @@ public class FileCreator {
 		return false;
 	}
 	
-	public void writeToFile(String path, String[] values){
+	/**
+	 * This method allows you to write a string array to a file
+	 * @param path The path of the file you are writing to
+	 * @param lines Each string in the array is going to be written as one line
+	 */
+	public void writeToFile(String path, String[] lines){
 		try {
 			PrintWriter writer = new PrintWriter(path+".txt", "UTF-8");
-			for(int i = 0; i<values.length; i++) writer.println(values[i]);
+			for(int i = 0; i<lines.length; i++) writer.println(lines[i]);
+			writer.close();
+		} catch (Exception e) {}
+	}
+	
+	/**
+	 * This method writes a single line to a file
+	 * @param path This is the path of the file
+	 * @param line this is the line you want to write to the file
+	 */
+	public void writeToFile(String path, String line){
+		try {
+			PrintWriter writer = new PrintWriter(path+".txt", "UTF-8");
+			writer.println(line);
 			writer.close();
 		} catch (Exception e) {}
 	}

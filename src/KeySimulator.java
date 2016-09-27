@@ -1,5 +1,9 @@
 import java.awt.AWTException;
+import java.awt.HeadlessException;
 import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -9,25 +13,25 @@ import java.util.Random;
 import java.util.Scanner;
  
 public class KeySimulator {
-	Robot r;
-	Random rd = new Random();
-	Scanner scan = new Scanner(System.in);
-	FileCreator fileCreator = new FileCreator();
-	HumanErrorSimulator typoError = new HumanErrorSimulator();
-	HashMap<Character, Integer> hmap = new HashMap<Character, Integer>();
+	private Robot r;
+	private Random rd = new Random();
+	private Scanner scan = new Scanner(System.in);
+	public FileCreator fileCreator = new FileCreator();
+	private Translator translator = new Translator(this);
+	public HumanErrorSimulator typoError = new HumanErrorSimulator();
+	private HashMap<Character, Integer> hmap = new HashMap<Character, Integer>();
 	
-	int charsPM = 500;//Chars per minute
+	private int charsPM = 500;//Chars per minute
 	
-	boolean wordNeedsFixing, errorKeyIsAWordEnd;
-	char actualKey;
+	private boolean wordNeedsFixing, errorKeyIsAWordEnd;
+	private char actualKey;
 	
-	int spaceAt; //Used to determine were a word begins and ends
-	int currentCharNo;
-	char[] charsInLine;
+	private int currentCharNo;
+	private char[] charsInLine;
 	
-	char[] spChars = {'"' , ':', '?', '{', '}', '<', '>', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '|' };
-	char[] toChars = {'\'', ';', '/', '[', ']', ',', '.', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\\'};
-	char[] wordEnds = {' ', '.', '{', '}', '[', ']', '(', ')', '-', ','}; //Used to find where a words ends or begins
+	public char[] spChars = {'"' , ':', '?', '{', '}', '<', '>', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '|' };
+	private char[] toChars = {'\'', ';', '/', '[', ']', ',', '.', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\\'};
+	private char[] wordEnds = {' ', '.', '{', '}', '[', ']', '(', ')', '-', ','}; //Used to find where a words ends or begins
 	
 	
 	public KeySimulator(){
@@ -37,10 +41,9 @@ public class KeySimulator {
 		}catch (AWTException e) {e.printStackTrace();}
 	}
 	
-	public void start(){
-		//fillHashMap();
-		//createAndWriteFile();
-		fileCreator.createAndWriteFile();
+	public void start() throws HeadlessException, UnsupportedFlavorException, IOException{
+		fileCreator.writeToFile("Paste Dump", translator.translate((String)Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor)));
+		//fileCreator.createAndWriteFile();
 		try {getFileThenType();} catch (InterruptedException e) {e.printStackTrace();}
 	}
 	
@@ -48,7 +51,7 @@ public class KeySimulator {
 		for(int i = 0; i<spChars.length; i++) hmap.put(spChars[i], KeyEvent.getExtendedKeyCodeForChar(toChars[i]));
 	}
 
-	private boolean doesListContain(char[] array, char c){
+	public boolean doesListContain(char[] array, char c){
 		for(char n : array){
 			if(c == n) return true;
 		}
@@ -57,21 +60,25 @@ public class KeySimulator {
 	
 	private void shiftChar(char c, boolean inHash){
 		r.keyPress(KeyEvent.VK_SHIFT);
-		if(inHash) r.keyPress(hmap.get(c));
-		else r.keyPress(KeyEvent.getExtendedKeyCodeForChar(c));
+		try{
+			if(inHash) r.keyPress(hmap.get(c));
+			else r.keyPress(KeyEvent.getExtendedKeyCodeForChar(c));
+		}catch(Exception e){e.printStackTrace();}
 		r.keyRelease(KeyEvent.VK_SHIFT);
 	}
   	
 	private void getFileThenType() throws InterruptedException{
-		//setCharsPerMinute(1200);//This line of code sets the chars per minute (in the future this will be dictated by the user)
 		Thread.sleep(2000);//This will be removed later on (hard coded sleep)
+		
+		String[] allLines = fileCreator.readFromFile("Paste Dump");
+		for(int i = 0; i<allLines.length; i++) typeLine(allLines[i]);
 
-		try (BufferedReader br = new BufferedReader(new FileReader("robotCopy.txt"))){
-			String currentLine;//Makes a local string to store the chars
-			while ((currentLine = br.readLine()) != null) {//Will only go into loop if there is something on the line of the file
-				typeLine(currentLine);
-			}
-		} catch (IOException e) {e.printStackTrace();}
+//		try (BufferedReader br = new BufferedReader(new FileReader("Paste Dump.txt"))){//robotCopy.txtnew FileReader("Paste Dump")
+//			String currentLine;//Makes a local string to store the chars
+//			while ((currentLine = br.readLine()) != null) {//Will only go into loop if there is something on the line of the file
+//				typeLine(currentLine);
+//			}
+//		} catch (IOException e) {e.printStackTrace();}
 	}
 	
 	private void typeLine(String currentLine){
@@ -83,7 +90,6 @@ public class KeySimulator {
 		for(int i = 0; i<currentLine.length(); i++){
 			sleep();//Sleeps for a certain amount of time dictated by the setCharsPerMinute method
 
-			if(stringToChars[i] == ' ') spaceAt = i;//If there is a space than it records it (this is used to determine where the word begins)
 			currentCharNo = i;//This save the location in the array of the char we are currently dealing with
 
 			//If the char is one of the special chars (spChars at top of class) it will 'convert' it into it 'lowercase' and then shift it back
@@ -148,12 +154,6 @@ public class KeySimulator {
 		double milliStop = 1d/(charsPM*1d / 60d / 1000d); //60 for seconds per minute, and 1000 for milliseconds per second
 		//long millis = (long) ((.75 + (rd.nextDouble()))*milliStop); //Test to generate human varibles
 		long millis = (long) milliStop;
-		try{
-			Thread.sleep(millis);
-		}catch(Exception e){ e.printStackTrace(); }
-	}
-	
-	private void sleep(int millis){
 		try{
 			Thread.sleep(millis);
 		}catch(Exception e){ e.printStackTrace(); }
