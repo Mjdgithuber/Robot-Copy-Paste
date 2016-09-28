@@ -1,17 +1,15 @@
-import java.awt.Robot;
 import java.util.Random;
 
 public class HumanErrorSimulator {
 	private Random rd = new Random();
 	
-	int rows = 4, columns = 10;
-	int arrayRow, arrayCol;
-	char[][] keys = new char[rows][columns];
-	String keyboard = "1234567890 qwertyuiop asdfghjkl; zxcvbnm,./";
+	private int rows = 4, columns = 10;
+	private int arrayRow, arrayCol;
+	private char[][] keys = new char[rows][columns];
+	private final String keyboard = "1234567890 qwertyuiop asdfghjkl; zxcvbnm,./";
 	
-	double chanceForError = .05;
-	double chanceForStickyShift = .02;
-	double chanceToCompleteWordBeforeFixing = .3;
+	private double chanceForError = .05;
+	private double chanceForStickyShift = .02;
 	
 	public HumanErrorSimulator(){
 		fillArray();
@@ -87,14 +85,6 @@ public class HumanErrorSimulator {
 	
 	private void checkForStickyShift(char c){
 		//Check to see if the shift key should shift more than one letter
-	}
-	
-	private void fixWord(Robot r){
-		if(rd.nextDouble() <= chanceToCompleteWordBeforeFixing){
-			//Finish the word and then fix it after it is done
-		}else{
-			//Immediately start fixing
-		}
 	}
 	
 	private boolean locateChar(char findChar){

@@ -5,8 +5,6 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyEvent;
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
@@ -24,15 +22,19 @@ public class KeySimulator {
 	private int charsPM = 500;//Chars per minute
 	
 	private boolean wordNeedsFixing, errorKeyIsAWordEnd;
-	private char actualKey;
 	
 	private int currentCharNo;
 	private char[] charsInLine;
 	
-	public char[] spChars = {'"' , ':', '?', '{', '}', '<', '>', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '|' };
-	private char[] toChars = {'\'', ';', '/', '[', ']', ',', '.', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\\'};
-	private char[] wordEnds = {' ', '.', '{', '}', '[', ']', '(', ')', '-', ','}; //Used to find where a words ends or begins
+	public final char[] spChars = {'"' , ':', '?', '{', '}', '<', '>', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '|' };
+	private final char[] toChars = {'\'', ';', '/', '[', ']', ',', '.', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\\'};
+	private final char[] wordEnds = {' ', '.', '{', '}', '[', ']', '(', ')', '-', ',', '\n'}; //Used to find where a words ends or begins
 	
+	private double chanceToFixWordImmediately = .2;
+	private double chanceToCompleteWordBeforeFixing = .5;
+	private double chanceDeleteWholeWordThenFix = 1d;
+	
+	private int skipForward = 0;
 	
 	public KeySimulator(){
 		try {
@@ -50,13 +52,6 @@ public class KeySimulator {
 	private void fillHashMap(){
 		for(int i = 0; i<spChars.length; i++) hmap.put(spChars[i], KeyEvent.getExtendedKeyCodeForChar(toChars[i]));
 	}
-
-	public boolean doesListContain(char[] array, char c){
-		for(char n : array){
-			if(c == n) return true;
-		}
-		return false;
-	}
 	
 	private void shiftChar(char c, boolean inHash){
 		r.keyPress(KeyEvent.VK_SHIFT);
@@ -72,13 +67,6 @@ public class KeySimulator {
 		
 		String[] allLines = fileCreator.readFromFile("Paste Dump");
 		for(int i = 0; i<allLines.length; i++) typeLine(allLines[i]);
-
-//		try (BufferedReader br = new BufferedReader(new FileReader("Paste Dump.txt"))){//robotCopy.txtnew FileReader("Paste Dump")
-//			String currentLine;//Makes a local string to store the chars
-//			while ((currentLine = br.readLine()) != null) {//Will only go into loop if there is something on the line of the file
-//				typeLine(currentLine);
-//			}
-//		} catch (IOException e) {e.printStackTrace();}
 	}
 	
 	private void typeLine(String currentLine){
@@ -93,7 +81,7 @@ public class KeySimulator {
 			currentCharNo = i;//This save the location in the array of the char we are currently dealing with
 
 			//If the char is one of the special chars (spChars at top of class) it will 'convert' it into it 'lowercase' and then shift it back
-			if(doesListContain(spChars, stringToChars[i])) shiftChar(stringToChars[i], true);
+			if(Utilities.doesListContain(spChars, stringToChars[i])) shiftChar(stringToChars[i], true);
 			else{
 				//If the char is uppercase then we need to send it to be uppercased
 				if(Character.isUpperCase(stringToChars[i])) shiftChar(stringToChars[i], false);
@@ -102,7 +90,7 @@ public class KeySimulator {
 						char possibleErrorKey = typoError.testForError(stringToChars[i]);//This generates a char that might be wrong (Human Error)
 						if(possibleErrorKey != stringToChars[i]){//Checks to see if there was an error (this error is fake and on purpose!)
 							wordNeedsFixing = true;//Tells the program to backspace when it is time
-							if(doesListContain(wordEnds, stringToChars[i])){
+							if(Utilities.doesListContain(wordEnds, stringToChars[i])){
 								errorKeyIsAWordEnd = true;
 							}
 						}
@@ -113,47 +101,107 @@ public class KeySimulator {
 			}
 			
 			if(wordNeedsFixing){
-				wordNeedsFixing = false;
-				sleep();
-				sleep();
-				
-				int goBack = 0;
-				
-				for(int loops = 0; currentCharNo-loops > -1 && !doesListContain(wordEnds, charsInLine[currentCharNo-loops]); loops++){
-					goBack++;
-					r.keyPress(KeyEvent.VK_BACK_SPACE);
-					sleep();
-				}
-				if(errorKeyIsAWordEnd){
-					errorKeyIsAWordEnd = false;
-					goBack++;
-					r.keyPress(KeyEvent.VK_BACK_SPACE);
-					sleep();
-				}
-				
-				
-				for(int reWrite=0; reWrite<goBack; reWrite++){
-					if(doesListContain(spChars, charsInLine[currentCharNo-goBack+reWrite+1])) shiftChar(charsInLine[currentCharNo-goBack+reWrite+1], true);
-					else{
-						if(Character.isUpperCase(charsInLine[currentCharNo-goBack+reWrite+1])) shiftChar(charsInLine[currentCharNo-goBack+reWrite+1], false);
-						else r.keyPress(KeyEvent.getExtendedKeyCodeForChar(charsInLine[currentCharNo-goBack+reWrite+1]));
-					}
-					sleep();
-				}
+				fixWord();
+				i += skipForward;
+				skipForward = 0;
 			}
 		}
 		sleep();
 		r.keyPress(KeyEvent.VK_ENTER);
+	}
+	
+	private void fixWord(){
+		sleep(2);
+		
+		double randNum = rd.nextDouble();
+		
+//		if(randNum <= chanceToFixWordImmediately) fixWordImmediately();
+//		else if(randNum <= chanceToCompleteWordBeforeFixing) finishWordThenFix();
+//		else if(randNum <= chanceDeleteWholeWordThenFix) deleteWordThenFix();
+		
+		finishWordThenFix();
+		
+		wordNeedsFixing = false;
+	}
+	
+	private void fixWordImmediately(){
+		r.keyPress(KeyEvent.VK_BACK_SPACE);
+		sleep();
+		
+		writeLetters(currentCharNo);
+	}
+	
+	private void finishWordThenFix(){
+		//Will finish the word (checks by reaches the end of the line or by reaching an end-word char defined at top of class)
+		int displacement = 0;
+		for(int i = 1; ((currentCharNo+i)<charsInLine.length &&(!Utilities.doesListContain(wordEnds, charsInLine[currentCharNo+i]))); i++){
+			writeLetters(currentCharNo+i);
+			displacement++;
+		}
+		
+		//Finds bad char and uses left arrow to go back to it
+		for(int i = 0; i<displacement; i++){
+			r.keyPress(KeyEvent.VK_LEFT);
+			sleep(.90);
+		}
+		
+		fixWordImmediately();//Fixes the char
+		
+		sleep(1.25);
+		
+		//Goes back to the end of the word
+		for(int i = 0; i<displacement; i++){
+			r.keyPress(KeyEvent.VK_RIGHT);
+			sleep(.90);
+		}
+		
+		skipForward = displacement;
+	}
+	
+	private void deleteWordThenFix(){
+		int goBack = 0;
+		
+		for(int loops = 0; currentCharNo-loops > -1 && !Utilities.doesListContain(wordEnds, charsInLine[currentCharNo-loops]); loops++){
+			goBack++;
+			r.keyPress(KeyEvent.VK_BACK_SPACE);
+			sleep();
+		}
+		if(errorKeyIsAWordEnd){
+			errorKeyIsAWordEnd = false;
+			goBack++;
+			r.keyPress(KeyEvent.VK_BACK_SPACE);
+			sleep();
+		}
+		
+		for(int reWrite=0; reWrite<goBack; reWrite++) writeLetters(currentCharNo-goBack+reWrite+1);
+	}
+	
+	private void writeLetters(int charLocation){
+		if(Utilities.doesListContain(spChars, charsInLine[charLocation])) shiftChar(charsInLine[charLocation], true);
+		else{
+			if(Character.isUpperCase(charsInLine[charLocation])) shiftChar(charsInLine[charLocation], false);
+			else r.keyPress(KeyEvent.getExtendedKeyCodeForChar(charsInLine[charLocation]));
+		}
+		sleep();
 	}
   	
 	public void setCharsPerMinute(int cps){ charsPM = cps; }
 	
 	public int getCharsPerMinute(){ return charsPM; }
 	
-	private void sleep(){
+	public void sleep(){
 		double milliStop = 1d/(charsPM*1d / 60d / 1000d); //60 for seconds per minute, and 1000 for milliseconds per second
 		//long millis = (long) ((.75 + (rd.nextDouble()))*milliStop); //Test to generate human varibles
 		long millis = (long) milliStop;
+		try{
+			Thread.sleep(millis);
+		}catch(Exception e){ e.printStackTrace(); }
+	}
+	
+	public void sleep(double multiplier){
+		double milliStop = 1d/(charsPM*1d / 60d / 1000d); //60 for seconds per minute, and 1000 for milliseconds per second
+		//long millis = (long) ((.75 + (rd.nextDouble()))*milliStop); //Test to generate human varibles
+		long millis = (long) (milliStop*multiplier);
 		try{
 			Thread.sleep(millis);
 		}catch(Exception e){ e.printStackTrace(); }

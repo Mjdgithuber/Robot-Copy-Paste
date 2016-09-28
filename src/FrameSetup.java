@@ -1,10 +1,7 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.HeadlessException;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JButton;
@@ -44,7 +41,7 @@ public class FrameSetup extends JFrame{
 			
 			//Creates the settings file
 			keySim.fileCreator.createFile("Settings");
-			String[] values = {"Chars_Per_Minute=250", "Name=", "Poem_Title=", "Author=", "Chance_For_Error=3"};
+			String[] values = {"Chars_Per_Minute=650", "Name=", "Poem_Title=", "Author=", "Chance_For_Error=3"};
 			
 			keySim.fileCreator.writeToFile("Settings", values);
 			firstTimeRunning = true;
