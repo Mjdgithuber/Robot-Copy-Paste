@@ -8,12 +8,10 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
-import java.util.Scanner;
  
 public class KeySimulator {
 	private Robot r;
 	private Random rd = new Random();
-	private Scanner scan = new Scanner(System.in);
 	public FileCreator fileCreator = new FileCreator();
 	private Translator translator = new Translator(this);
 	public HumanErrorSimulator typoError = new HumanErrorSimulator();
@@ -26,16 +24,20 @@ public class KeySimulator {
 	private int currentCharNo;
 	private char[] charsInLine;
 	
-	public final char[] spChars = {'"' , ':', '?', '{', '}', '<', '>', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '|' };
+	private final char[] spChars = {'"' , ':', '?', '{', '}', '<', '>', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '|' };
 	private final char[] toChars = {'\'', ';', '/', '[', ']', ',', '.', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\\'};
-	private final char[] wordEnds = {' ', '.', '{', '}', '[', ']', '(', ')', '-', ',', '\n'}; //Used to find where a words ends or begins
+	private final char[] wordEnds = {' ', '.', '{', '}', '[', ']', '(', ')', '-', ','}; //Used to find where a words ends or begins
 	
 	private double chanceToFixWordImmediately = .2;
 	private double chanceToCompleteWordBeforeFixing = .5;
 	private double chanceDeleteWholeWordThenFix = 1d;
+	private int previousErrorType=0;//1 is to fix immediatly, 2 to complete word before fixing, 3 is to delete word then fix
 	
 	private int skipForward = 0;
 	
+	/**
+	 * Makes a new robot and fills the hashmap for the object
+	 */
 	public KeySimulator(){
 		try {
 			r = new Robot();
@@ -43,16 +45,26 @@ public class KeySimulator {
 		}catch (AWTException e) {e.printStackTrace();}
 	}
 	
+	/**
+	 * Writes the clipboard to the file (Paste Dump) and then starts to type it
+	 */
 	public void start() throws HeadlessException, UnsupportedFlavorException, IOException{
 		fileCreator.writeToFile("Paste Dump", translator.translate((String)Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor)));
-		//fileCreator.createAndWriteFile();
 		try {getFileThenType();} catch (InterruptedException e) {e.printStackTrace();}
 	}
 	
+	/**
+	 * Fills the hash map with the chars that are not letters, but still need to be typed (like { * %)
+	 */
 	private void fillHashMap(){
 		for(int i = 0; i<spChars.length; i++) hmap.put(spChars[i], KeyEvent.getExtendedKeyCodeForChar(toChars[i]));
 	}
 	
+	/**
+	 * Takes a char and types it with the shift key on
+	 * @param c The char you want to shift
+	 * @param inHash This tells the method if the key is a specail (not a letter, like { or +)
+	 */
 	private void shiftChar(char c, boolean inHash){
 		r.keyPress(KeyEvent.VK_SHIFT);
 		try{
@@ -62,6 +74,10 @@ public class KeySimulator {
 		r.keyRelease(KeyEvent.VK_SHIFT);
 	}
   	
+	/**
+	 * This gets the file (Paste Dump is the name) and reads from it and sends it to be typed
+	 * @throws InterruptedException sends the InterruptedException to the caller of the method
+	 */
 	private void getFileThenType() throws InterruptedException{
 		Thread.sleep(2000);//This will be removed later on (hard coded sleep)
 		
@@ -69,8 +85,11 @@ public class KeySimulator {
 		for(int i = 0; i<allLines.length; i++) typeLine(allLines[i]);
 	}
 	
+	/**
+	 * Types the current line
+	 * @param currentLine The string of the line that is to be typed
+	 */
 	private void typeLine(String currentLine){
-		//System.out.println(currentLine);
 		char[] stringToChars = currentLine.toCharArray(); //Converts the current line into an array of chars
 		
 		charsInLine = stringToChars;//Records stringToChars in a global array so it can be used in other methods
@@ -90,16 +109,14 @@ public class KeySimulator {
 						char possibleErrorKey = typoError.testForError(stringToChars[i]);//This generates a char that might be wrong (Human Error)
 						if(possibleErrorKey != stringToChars[i]){//Checks to see if there was an error (this error is fake and on purpose!)
 							wordNeedsFixing = true;//Tells the program to backspace when it is time
-							if(Utilities.doesListContain(wordEnds, stringToChars[i])){
+							if(Utilities.doesListContain(wordEnds, stringToChars[i]))
 								errorKeyIsAWordEnd = true;
-							}
 						}
 						r.keyPress(KeyEvent.getExtendedKeyCodeForChar(possibleErrorKey));//Types the key (error or not)
 					}
 					catch(Exception e){e.printStackTrace();}
 				}
 			}
-			
 			if(wordNeedsFixing){
 				fixWord();
 				i += skipForward;
@@ -110,72 +127,92 @@ public class KeySimulator {
 		r.keyPress(KeyEvent.VK_ENTER);
 	}
 	
+	/**
+	 * This method determines what kind of error it should be and calls the appropriate methods
+	 */
 	private void fixWord(){
 		sleep(2);
 		
+		//This determines what kind of error it is going to be (It is random, but it won't be the same error twice)
 		double randNum = rd.nextDouble();
+		if(randNum <= chanceToFixWordImmediately && previousErrorType!=1) fixWordImmediately();
+		else if(randNum <= chanceToCompleteWordBeforeFixing && previousErrorType!=2) finishWordThenFix();
+		else if(randNum <= chanceDeleteWholeWordThenFix && previousErrorType!=3) deleteWordThenFix();
+		else fixWordImmediately();
 		
-//		if(randNum <= chanceToFixWordImmediately) fixWordImmediately();
-//		else if(randNum <= chanceToCompleteWordBeforeFixing) finishWordThenFix();
-//		else if(randNum <= chanceDeleteWholeWordThenFix) deleteWordThenFix();
-		
-		finishWordThenFix();
-		
+		//These just reset the booleans so it doesn't mess with future errors
+		errorKeyIsAWordEnd = false;
 		wordNeedsFixing = false;
 	}
 	
+	/**
+	 * This method will fix the char immediately
+	 */
 	private void fixWordImmediately(){
-		r.keyPress(KeyEvent.VK_BACK_SPACE);
-		sleep();
+		previousErrorType = 1;//Sets the error type to the corresponding type
+		
+		backspaceAndSleep();
 		
 		writeLetters(currentCharNo);
 	}
 	
+	/**
+	 * This method finishes the word and then goes back to fix the error using the arrow keys 
+	 */
 	private void finishWordThenFix(){
-		//Will finish the word (checks by reaches the end of the line or by reaching an end-word char defined at top of class)
+		previousErrorType = 2;//Sets the error type to the corresponding type
+		
+		//Will finish the word with no more errors (by reaching the end of the line or by reaching an end-word char defined at top of class)
 		int displacement = 0;
 		for(int i = 1; ((currentCharNo+i)<charsInLine.length &&(!Utilities.doesListContain(wordEnds, charsInLine[currentCharNo+i]))); i++){
 			writeLetters(currentCharNo+i);
 			displacement++;
 		}
 		
-		//Finds bad char and uses left arrow to go back to it
+		//Goes back to the bad char by using the left arrow key
 		for(int i = 0; i<displacement; i++){
 			r.keyPress(KeyEvent.VK_LEFT);
 			sleep(.90);
 		}
-		
 		fixWordImmediately();//Fixes the char
-		
 		sleep(1.25);
-		
 		//Goes back to the end of the word
 		for(int i = 0; i<displacement; i++){
 			r.keyPress(KeyEvent.VK_RIGHT);
 			sleep(.90);
 		}
 		
-		skipForward = displacement;
+		skipForward = displacement;//Makes sure the main method doesn't write keys that this method just did
 	}
 	
+	/**
+	 * This method deletes the entire word after the error key is pressed and re-types up to the point of the error (fixing the bad key)
+	 */
 	private void deleteWordThenFix(){
+		previousErrorType = 3;//Sets the error type to the corresponding type
+		
 		int goBack = 0;
 		
+		//The loop backspaces a certain amount of times and records how many times it does it
 		for(int loops = 0; currentCharNo-loops > -1 && !Utilities.doesListContain(wordEnds, charsInLine[currentCharNo-loops]); loops++){
 			goBack++;
-			r.keyPress(KeyEvent.VK_BACK_SPACE);
-			sleep();
-		}
-		if(errorKeyIsAWordEnd){
-			errorKeyIsAWordEnd = false;
-			goBack++;
-			r.keyPress(KeyEvent.VK_BACK_SPACE);
-			sleep();
+			backspaceAndSleep();
 		}
 		
+		//This if checks to see if the key that was ther error is a word end (because if it is the error key wouldn't be deleted)
+		if(errorKeyIsAWordEnd){
+			goBack++;
+			backspaceAndSleep();
+		}
+		
+		//This loop re-writes the deleted chars (currentCharNo-goBack+reWrite+1 = the char that was the error key - how many times it went back+the times it has already gone back+1)
 		for(int reWrite=0; reWrite<goBack; reWrite++) writeLetters(currentCharNo-goBack+reWrite+1);
 	}
 	
+	/**
+	 * This method is used by all of the error types, and is used to re-write (or write) letters, and won't generate any errors
+	 * @param charLocation This is where the wrong char is located
+	 */
 	private void writeLetters(int charLocation){
 		if(Utilities.doesListContain(spChars, charsInLine[charLocation])) shiftChar(charsInLine[charLocation], true);
 		else{
@@ -184,21 +221,43 @@ public class KeySimulator {
 		}
 		sleep();
 	}
+	
+	/**
+	 * It backspaces one key and then sleeps
+	 */
+	private void backspaceAndSleep(){
+		r.keyPress(KeyEvent.VK_BACK_SPACE);
+		sleep();
+	}
   	
+	/**
+	 * Sets the chars per minute to change the amount of time the thread sleeps
+	 * @param cps What you are changing the chars per minute to
+	 */
 	public void setCharsPerMinute(int cps){ charsPM = cps; }
 	
+	/**
+	 * Returns the chars per minute
+	 * @return Returns the chars per minute as an int
+	 */
 	public int getCharsPerMinute(){ return charsPM; }
 	
-	public void sleep(){
-		double milliStop = 1d/(charsPM*1d / 60d / 1000d); //60 for seconds per minute, and 1000 for milliseconds per second
-		//long millis = (long) ((.75 + (rd.nextDouble()))*milliStop); //Test to generate human varibles
-		long millis = (long) milliStop;
-		try{
-			Thread.sleep(millis);
-		}catch(Exception e){ e.printStackTrace(); }
-	}
+	/**
+	 * This method stop the thread for a amount of time (dictated by the chars per minute)
+	 */
+	public void sleep(){superSleep(1);}
 	
-	public void sleep(double multiplier){
+	/**
+	 * This method stop the thread for a amount of time (dictated by the chars per minute) multiplied by the multiplier parameter
+	 * @param multiplier Makes the sleep longer or shorter reletive to the chars per minute
+	 */
+	public void sleep(double multiplier){superSleep(multiplier);}
+	
+	/**
+	 * This method contains all of the code for the sleep method so they both don't repeat the same code
+	 * @param multiplier Multipies the amount of time stoped by the thread (1 is the default if you don't want to change anything)
+	 */
+	private void superSleep(double multiplier){
 		double milliStop = 1d/(charsPM*1d / 60d / 1000d); //60 for seconds per minute, and 1000 for milliseconds per second
 		//long millis = (long) ((.75 + (rd.nextDouble()))*milliStop); //Test to generate human varibles
 		long millis = (long) (milliStop*multiplier);

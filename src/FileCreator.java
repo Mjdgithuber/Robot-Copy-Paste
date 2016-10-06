@@ -8,21 +8,21 @@ import java.io.PrintWriter;
 
 public class FileCreator {
 	
+	//TODO delete this because it was updated for the new file creator methods 
 	//private Translator translator = new Translator();
-	
-	public void createAndWriteFile(){
-		try{
-			String s = (String)Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
-			//s = translator.translate(s);
-			
-			File file = new File("robotCopy.txt");
-			file.createNewFile();
-			
-			PrintWriter writer = new PrintWriter("robotCopy.txt", "UTF-8");
-			writer.println(s);
-			writer.close();
-		}catch (Exception e){System.out.println("Something is wrong with the creation of file");}
-	}
+//	public void createAndWriteFile(){
+//		try{
+//			String s = (String)Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+//			//s = translator.translate(s);
+//			
+//			File file = new File("robotCopy.txt");
+//			file.createNewFile();
+//			
+//			PrintWriter writer = new PrintWriter("robotCopy.txt", "UTF-8");
+//			writer.println(s);
+//			writer.close();
+//		}catch (Exception e){System.out.println("Something is wrong with the creation of file");}
+//	}
 	
 	public boolean doesFileExist(String path){
 		File file = new File(path+".txt");
@@ -41,7 +41,9 @@ public class FileCreator {
 			PrintWriter writer = new PrintWriter(path+".txt", "UTF-8");
 			for(int i = 0; i<lines.length; i++) writer.println(lines[i]);
 			writer.close();
-		} catch (Exception e) {}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -54,7 +56,9 @@ public class FileCreator {
 			PrintWriter writer = new PrintWriter(path+".txt", "UTF-8");
 			writer.println(line);
 			writer.close();
-		} catch (Exception e) {}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public String[] readFromFile(String path){

@@ -152,7 +152,9 @@ public class FrameSetup extends JFrame{
 						public void run(){
 							isRunning = true;
 							try{keySim.start();}
-							catch (Exception e){}
+							catch (Exception e){
+								e.printStackTrace();
+							}
 							isRunning = false;
 						}
 					};
@@ -198,7 +200,10 @@ public class FrameSetup extends JFrame{
 					keySim.fileCreator.writeToFile("Settings", toSettingsFile);//This writes the string to the settings files
 					
 					changePanel(panelSettings, panelMain);//Goes back to the main menu
-				}catch(Exception e){mustEnterNumberError.setVisible(true);}
+				}catch(Exception e){
+					e.printStackTrace();
+					mustEnterNumberError.setVisible(true);
+				}
 		}});
 	}
 	
