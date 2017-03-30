@@ -6,6 +6,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
  
@@ -28,9 +29,15 @@ public class KeySimulator {
 	private final char[] toChars = {'\'', ';', '/', '[', ']', ',', '.', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\\'};
 	private final char[] wordEnds = {' ', '.', '{', '}', '[', ']', '(', ')', '-', ','}; //Used to find where a words ends or begins
 	
-	private double chanceToFixWordImmediately = .2;
-	private double chanceToCompleteWordBeforeFixing = .5;
-	private double chanceDeleteWholeWordThenFix = 1d;
+	private boolean fixImm, compThenFix, deleteThenFix;
+	private double baseChanceToFixWordImmediately = .5;
+	private double baseChanceToCompleteWordBeforeFixing = .3;
+	private double baseChanceDeleteWholeWordThenFix = .2;
+	
+	
+	private double chanceToFixWordImmediately = .2;//20
+	private double chanceToCompleteWordBeforeFixing = .5;//30
+	private double chanceDeleteWholeWordThenFix = .3;//50
 	private int previousErrorType=0;//1 is to fix immediatly, 2 to complete word before fixing, 3 is to delete word then fix
 	
 	private int skipForward = 0;
@@ -106,7 +113,7 @@ public class KeySimulator {
 				if(Character.isUpperCase(stringToChars[i])) shiftChar(stringToChars[i], false);
 				else{
 					try{
-						char possibleErrorKey = typoError.testForError(stringToChars[i]);//This generates a char that might be wrong (Human Error)
+						char possibleErrorKey = typoError.testForError(stringToChars[i], hasLetterFixer());//This generates a char that might be wrong (Human Error)
 						if(possibleErrorKey != stringToChars[i]){//Checks to see if there was an error (this error is fake and on purpose!)
 							wordNeedsFixing = true;//Tells the program to backspace when it is time
 							if(Utilities.doesListContain(wordEnds, stringToChars[i]))
@@ -125,6 +132,14 @@ public class KeySimulator {
 		}
 		sleep();
 		r.keyPress(KeyEvent.VK_ENTER);
+		sleep(3);
+	}
+	
+	private boolean hasLetterFixer(){
+		if(fixImm) return true;
+		if(compThenFix) return true;
+		if(deleteThenFix) return true;
+		return false;
 	}
 	
 	/**
@@ -135,10 +150,23 @@ public class KeySimulator {
 		
 		//This determines what kind of error it is going to be (It is random, but it won't be the same error twice)
 		double randNum = rd.nextDouble();
-		if(randNum <= chanceToFixWordImmediately && previousErrorType!=1) fixWordImmediately();
-		else if(randNum <= chanceToCompleteWordBeforeFixing && previousErrorType!=2) finishWordThenFix();
-		else if(randNum <= chanceDeleteWholeWordThenFix && previousErrorType!=3) deleteWordThenFix();
-		else fixWordImmediately();
+		
+		double totalErrorPercent=0, error1Chance = 0, error2Chance = 0, error3Chance = 0;
+		double factor=1;
+		
+		if(fixImm) totalErrorPercent += baseChanceToFixWordImmediately;
+		if(compThenFix) totalErrorPercent += baseChanceToCompleteWordBeforeFixing;
+		if(deleteThenFix)totalErrorPercent += baseChanceDeleteWholeWordThenFix;
+		
+		if(totalErrorPercent<1d) factor = 1/totalErrorPercent;
+		
+		if(fixImm) error1Chance = baseChanceToFixWordImmediately*factor;
+		if(compThenFix) error2Chance = baseChanceToCompleteWordBeforeFixing*factor;
+		if(deleteThenFix)error3Chance = baseChanceDeleteWholeWordThenFix*factor;
+		
+		if(randNum <= error1Chance && error1Chance!=0) fixWordImmediately();
+		else if(randNum <= error2Chance+error1Chance && error2Chance!=0) finishWordThenFix();
+		else if(randNum <= error3Chance+error2Chance+error1Chance && error3Chance!=0) deleteWordThenFix();
 		
 		//These just reset the booleans so it doesn't mess with future errors
 		errorKeyIsAWordEnd = false;
@@ -242,6 +270,10 @@ public class KeySimulator {
 	 */
 	public int getCharsPerMinute(){ return charsPM; }
 	
+	public void setFixImm(boolean b){ fixImm = b; }
+	public void setCompThenFix(boolean b){ compThenFix = b; }
+	public void setDeleteThenFix(boolean b){ deleteThenFix = b; }
+	
 	/**
 	 * This method stop the thread for a amount of time (dictated by the chars per minute)
 	 */
@@ -259,8 +291,8 @@ public class KeySimulator {
 	 */
 	private void superSleep(double multiplier){
 		double milliStop = 1d/(charsPM*1d / 60d / 1000d); //60 for seconds per minute, and 1000 for milliseconds per second
-		//long millis = (long) ((.75 + (rd.nextDouble()))*milliStop); //Test to generate human varibles
-		long millis = (long) (milliStop*multiplier);
+		long millis = (long) (((1 + rd.nextDouble() + (rd.nextDouble()*.5) + (rd.nextDouble()*.25))*milliStop)*multiplier); //Test to generate human varibles long millis = (long) (((.75 + (rd.nextDouble()))*milliStop)*multiplier); 
+		//long millis = (long) (milliStop*multiplier);
 		try{
 			Thread.sleep(millis);
 		}catch(Exception e){ e.printStackTrace(); }

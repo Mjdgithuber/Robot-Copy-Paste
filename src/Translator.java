@@ -6,7 +6,7 @@ public class Translator {
 	
 	private String availableChars = "1234567890-=!@#$%^&*()_+"//Top line on keyboard
 			+ "qwertyuiop[]\\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?"//Letters and what what not
-			+ "”“’‘…" //Special chars
+			+ "”“’‘…—" //Special chars
 			+ " "//Space 
 			+ "\n"//New line char
 			+ "\t";//Tab
@@ -19,6 +19,7 @@ public class Translator {
 		addChars("”“", '"');
 		addChars("’‘", '\'');
 		addChars("…", '.');
+		addChars("—", '-');
 	}
 	
 	private void addChars(String s, char c){

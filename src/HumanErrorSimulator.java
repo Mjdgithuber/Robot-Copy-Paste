@@ -25,10 +25,10 @@ public class HumanErrorSimulator {
 		}
 	}
 	
-	public char testForError(char c){
+	public char testForError(char c, boolean b){
 		double percent = rd.nextDouble();
 		
-		if(percent<=chanceForError) return switchChar(c);//.05
+		if(percent<=chanceForError && b) return switchChar(c);//.05
 		return c;
 	}
 	

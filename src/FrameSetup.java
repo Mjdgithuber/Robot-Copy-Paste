@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -15,17 +16,24 @@ public class FrameSetup extends JFrame{
 	
 	private KeySimulator keySim = new KeySimulator();
 	
-	private JButton help, run, settings, 
-			plusOne, plusTen, plusOneHundred, minusOne, minusTen, minusOneHundred, goBackToMainMenu;
-	private JLabel charsPerMinute, charsPerMinuteTitle,
-			fullNameTitle, poemTitle, authorTitle, chanceForErrorTitle, mustEnterNumberError, percentSign;
-	private JTextField fullName, poem, author, chanceForError;
+	private JButton help, run, settings, // main menu
+			backToMainMenu, // help menu
+			plusOne, plusTen, plusOneHundred, minusOne, minusTen, minusOneHundred, save; // settings
+	
+	private JCheckBox fixImmediately, finishWordThenFix, deleteWholeWordThenFix; // settings
+	
+	private JLabel charsPerMinute, charsPerMinuteTitle, // main menu
+			helpText, // help menu
+			fullNameTitle, poemTitle, authorTitle, chanceForErrorTitle, mustEnterNumberError, percentSign; // settings
+	
+	private JTextField fullName, poem, author, chanceForError; // settings
 	
 	private ArrayList<JComponent> optionMenuObjects = new ArrayList<JComponent>();
 	private ArrayList<JButton> plusMinusButtons = new ArrayList<JButton>();
 	
 	private JPanel panelMain = new JPanel();
 	private JPanel panelSettings = new JPanel();
+	private JPanel panelHelp = new JPanel();
 	
 	private boolean isRunning = false, firstTimeRunning = false;
 	
@@ -57,6 +65,7 @@ public class FrameSetup extends JFrame{
 		setLocationRelativeTo(null);
 		
 		addGui();
+		loadSettings();
 	}
 	
 	public static void main(String[] args){
@@ -64,7 +73,44 @@ public class FrameSetup extends JFrame{
 	}
 	
 	private void addGui(){
+		createMainMenuPanel();
 		
+		createHelpPanel();
+		
+		createSettingsPanel();
+
+		addListeners();//Adds all of the button listeners
+		
+		//Will send the user to the settings page if this is the first time they have loaded the program, or will send them to the main menu
+		if(firstTimeRunning) add(panelSettings);
+		else add(panelMain);
+		
+		setVisible(true);
+	}
+	
+	private void loadSettings(){
+		//This loads the settings from the file (On the first run these will be preset)
+		String[] stringValues = keySim.fileCreator.readFromFile("Settings");
+		keySim.setCharsPerMinute(Integer.parseInt(stringValues[0].split("=", 2)[1]));changeCPM(0);//Change cpm updates the label
+		fullName.setText(stringValues[1].split("=", 2)[1]);
+		poem.setText(stringValues[2].split("=", 2)[1]);
+		author.setText(stringValues[3].split("=", 2)[1]);
+		chanceForError.setText(stringValues[4].split("=", 2)[1]);keySim.typoError.setChanceForError((Double.parseDouble(chanceForError.getText())/100));
+		fixImmediately.setSelected(Boolean.parseBoolean(stringValues[5].split("=", 2)[1]));
+		finishWordThenFix.setSelected(Boolean.parseBoolean(stringValues[6].split("=", 2)[1]));
+		deleteWholeWordThenFix.setSelected(Boolean.parseBoolean(stringValues[7].split("=", 2)[1]));
+		
+		if(fixImmediately.isSelected()) keySim.setFixImm(true);
+		else keySim.setFixImm(false);
+		
+		if(finishWordThenFix.isSelected()) keySim.setCompThenFix(true);
+		else keySim.setCompThenFix(false);
+		
+		if(deleteWholeWordThenFix.isSelected()) keySim.setDeleteThenFix(true);
+		else keySim.setDeleteThenFix(false);
+	}
+	
+	private void createMainMenuPanel(){
 		/************************************************
 		* This is setting up the panel for the main menu*
 		************************************************/
@@ -76,9 +122,42 @@ public class FrameSetup extends JFrame{
 		panelMain.add(help, BorderLayout.NORTH);
 		panelMain.add(run, BorderLayout.CENTER);
 		panelMain.add(settings, BorderLayout.SOUTH);
+	}
+	
+	private void createHelpPanel(){
+		/************************************************
+		* This is setting up the panel for the help menu*
+		************************************************/
+		//panelHelp.setLayout(new BorderLayout());
+		panelHelp.setLayout(null);
+		helpText = new JLabel("<html>Hello and welcome to a program built to make your life easier."
+				+ "<br>This program will simulate key presses which means that it is"
+				+ "<br>impossible for any body to tell whether you copy and pasted."
+				+ "<br>The best part is even if they know this program exists, they"
+				+ "<br>still can't do anything about it. With that out of the way"
+				+ "<br>I can start to tell you how it works"
+				+ "<br>"
+				+ "<br>In the settings menu you can set specific things like your"
+				+ "<br>name and the author of the poem to make your life even easier"
+				+ "<br>because thats what its all about. These settings even save and"
+				+ "<br>I have included a way to change how much the computer makes"
+				+ "<br>errors as well as chosing what kind of errors it makes. If you"
+				+ "<br>find any errors in the program it self don't hesitate to tell me"
+				+ "<br>about them."
+				+ "<br>"
+				+ "<br>Enjoy!"
+				+ "</html>");
+		//panelHelp.add(helpText, BorderLayout.CENTER);
+		helpText.setBounds(5, -50, 378, 382);
 		
+		backToMainMenu = new JButton("Back");
+		backToMainMenu.setBounds((getWidth()-70)/2, 315, 70, 30);
 		
-		
+		panelHelp.add(backToMainMenu);
+		panelHelp.add(helpText);
+	}
+	
+	private void createSettingsPanel(){
 		/****************************************************
 		* This is setting up the panel for the settings menu*
 		*****************************************************/
@@ -91,7 +170,7 @@ public class FrameSetup extends JFrame{
 		minusOneHundred = new JButton("---");setBounds(minusOneHundred, 7, 40, 55, 20);plusMinusButtons.add(minusOneHundred);
 		
 		//This is for the save button (to save settings)
-		goBackToMainMenu = new JButton("Save");setBounds(goBackToMainMenu, (getWidth()-70)/2, 315, 70, 30);
+		save = new JButton("Save");setBounds(save, (getWidth()-70)/2, 315, 70, 30);
 		
 		charsPerMinuteTitle = new JLabel("Set How Many Characters Per Minute");setBounds(charsPerMinuteTitle, ((getWidth()-220)/2)+4, 0, 215, 50);
 		
@@ -113,27 +192,15 @@ public class FrameSetup extends JFrame{
 		mustEnterNumberError.setForeground(Color.red);mustEnterNumberError.setVisible(false);
 		percentSign = new JLabel("%");setBounds(percentSign, 113, 190, 15, 25);
 		
-		//This loads the settings from the file (On the first run these will be preset)
-		String[] stringValues = keySim.fileCreator.readFromFile("Settings");
-		keySim.setCharsPerMinute(Integer.parseInt(stringValues[0].split("=", 2)[1]));changeCPM(0);//Change cpm updates the label
-		fullName.setText(stringValues[1].split("=", 2)[1]);
-		poem.setText(stringValues[2].split("=", 2)[1]);
-		author.setText(stringValues[3].split("=", 2)[1]);
-		chanceForError.setText(stringValues[4].split("=", 2)[1]);keySim.typoError.setChanceForError((Double.parseDouble(chanceForError.getText())/100));
-		
-		
+		fixImmediately = new JCheckBox("Fix the word immediately after the mistake");setBounds(fixImmediately, 8, 215, 280, 15);
+		finishWordThenFix = new JCheckBox("Finish the word then go back to fix it");setBounds(finishWordThenFix, 8, 230, 280, 15);
+		deleteWholeWordThenFix = new JCheckBox("Delete the entire word and then fix the error");setBounds(deleteWholeWordThenFix, 8, 245, 280, 15);
 		
 		//Sets the panel's layout to null so that objects locations can be manually input
 		panelSettings.setLayout(null);
 		for(int i = 0; i<optionMenuObjects.size(); i++) panelSettings.add(optionMenuObjects.get(i));//Adds all of the objects aforementioned
-		addListeners();//Adds all of the button listeners
-		
-		//Will send the user to the settings page if this is the first time they have loaded the program, or will send them to the main menu
-		if(firstTimeRunning) add(panelSettings);
-		else add(panelMain);
-		
-		setVisible(true);
 	}
+	
 	
 	private void setBounds(JComponent comp, int x, int y, int width, int height){
 		comp.setBounds(x, y, width, height);
@@ -162,12 +229,27 @@ public class FrameSetup extends JFrame{
 				}
 		}});
 		
+		help.addActionListener(new ActionListener(){//This is the help button at the top of the menu
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				changePanel(panelMain, panelHelp);
+		}});
+		
 		settings.addActionListener(new ActionListener(){//This is the settings button at the bottom of the menu
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				changePanel(panelMain, panelSettings);
 		}});
 		
+		/*******************
+		* Help Menu Buttons*
+		*******************/
+		
+		backToMainMenu.addActionListener(new ActionListener(){//This is the settings button at the bottom of the menu
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				changePanel(panelHelp, panelMain);
+		}});
 		
 		
 		/**************************
@@ -184,7 +266,7 @@ public class FrameSetup extends JFrame{
 		/*************
 		* Save Button*
 		*************/
-		goBackToMainMenu.addActionListener(new ActionListener(){
+		save.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				try{
@@ -195,9 +277,12 @@ public class FrameSetup extends JFrame{
 					
 					//This is an array containing all of the users settings from this page
 					String[] toSettingsFile = {"Chars_Per_Minute="+keySim.getCharsPerMinute(), "Name="+fullName.getText(), "Poem_Title="+poem.getText(), 
-							"Author="+author.getText(), "Chance_For_Error="+chanceForError.getText()};
-					
+							"Author="+author.getText(), "Chance_For_Error="+chanceForError.getText(), "Error_1="+fixImmediately.isSelected(),
+							"Error_2="+finishWordThenFix.isSelected(), "Error_3="+deleteWholeWordThenFix.isSelected()};
+
 					keySim.fileCreator.writeToFile("Settings", toSettingsFile);//This writes the string to the settings files
+					
+					loadSettings();
 					
 					changePanel(panelSettings, panelMain);//Goes back to the main menu
 				}catch(Exception e){
