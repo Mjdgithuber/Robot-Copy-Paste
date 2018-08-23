@@ -40,7 +40,7 @@ public class FrameSetup extends JFrame{
 	static FrameSetup main;
 	
 	public FrameSetup(){
-		
+		//Test
 		/******************************************************
 		* This creates the necessary files need to run program*
 		******************************************************/
@@ -58,7 +58,7 @@ public class FrameSetup extends JFrame{
 		/***********************************************
 		* This sets some default values for the JFrame *
 		***********************************************/
-		setTitle("Robot Copy Paste");
+		setTitle("Limited Matt^2 Edition");//"Robot Copy Paste"
 		setSize(378, 382);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setResizable(false);
