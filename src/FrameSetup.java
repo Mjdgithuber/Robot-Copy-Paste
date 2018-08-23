@@ -40,7 +40,6 @@ public class FrameSetup extends JFrame{
 	static FrameSetup main;
 	
 	public FrameSetup(){
-		//Test
 		/******************************************************
 		* This creates the necessary files need to run program*
 		******************************************************/
